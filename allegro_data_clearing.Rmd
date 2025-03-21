@@ -1,0 +1,100 @@
+---
+title: "Untitled"
+author: "iwkoiwko"
+date: "2025-03-21"
+output: html_document
+---
+```{r}
+library(readr)
+library(stringr)
+library(dplyr)
+library(openxlsx)
+library(tidyr)
+raw_data <- read_csv("~/archiwum allegro_webscrap/real_estate_data_testy.csv", )
+raw_data <- raw_data[, -1]
+
+```
+dividng on columns (data clearing)
+```{r}
+
+
+     raw_data2 <-   raw_data |>
+  separate_wider_delim(cols = Details, delim = ",", 
+                      names = c("type", "tobedeleted", "district", "Details",    "tobedeleted2"),
+                      too_many = "merge",
+                      too_few = "align_start")
+
+```
+deleting useless data
+```{r}
+      raw_data2 <- raw_data2[, -2]
+      raw_data2 <- raw_data2[, -4]
+
+
+```
+merging data that was badly divided in to columns
+```{r}
+raw_data2 <- raw_data2 |>
+       mutate(
+
+    Details = if_else(nchar(as.character(district)) > 17, 
+                           district, 
+                           Details),
+    district = if_else(nchar(as.character(district)) > 17, 
+                       NA_character_, 
+                       district)
+
+  )
+  
+
+```
+repeating the proces
+```{r}
+raw_data3 <- raw_data2 |>
+  mutate(
+    Details = if_else(nchar(as.character(Details)) < 29, 
+                      NA_character_, 
+                      Details)
+  )
+```
+deleting empty row
+```{r}
+raw_data4 <- raw_data3 |>
+  filter(!(is.na(Details) & is.na(district)))
+```
+clearing details column
+```{r}
+ raw_data4 <-   raw_data4 |>
+  separate_wider_delim(cols = Details, delim = "m²", 
+                      names = c("place", "rest"),
+                      too_many = "merge",
+                      too_few = "align_start")
+```
+clearing the rest of the "rest" column
+```{r}
+raw_data5 <- raw_data4 |> 
+  mutate(rest = sub("^[^0-9]+", "", rest))
+```
+extracting the date of the "rest" column
+```{r}
+ raw_data6 <-   raw_data5 |>
+  separate_wider_delim(cols = rest, delim = " o", 
+                      names = c("date", "price"),
+                      too_many = "merge",
+                      too_few = "align_start")
+```
+
+finding price
+```{r}
+cleaned_data <- raw_data6 |>
+   
+  mutate(price = substr(price, 18, nchar(price)))  
+
+```
+
+```{r}
+
+write.csv(cleaned_data, file = "cleaned_data.csv")
+write.xlsx(cleaned_data, file = "cleaned_data.xlsx")
+```
+

@@ -1,0 +1,38 @@
+---
+title: "Untitled"
+author: "iwkoiwko"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(readr)
+data <- read_csv("cleaned_data.csv")
+ data <- data |>
+  filter(district != "4 pokoje")
+ data <- data |>
+  mutate(price = as.numeric(gsub('"', '', price)))
+```
+
+```{r}
+data_by_district <- data|>
+  group_by(district)|>
+ summarise(mean_price = mean(price, na.rm = TRUE))
+
+  
+```
+
+histogram
+```{r}
+ggplot(data_by_district, aes(x = district, y = mean_price)) +
+  geom_col(fill = "skyblue") +
+  labs(title = "Mean Price per District",
+       x = "District",
+       y = "Mean Price")+
+  scale_x_discrete(expand = expansion(mult = c(0.0000000001, 0.0000000001)))
+```
+
+
+
